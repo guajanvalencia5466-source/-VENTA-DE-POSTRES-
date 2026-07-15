@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crocrant & Mousse - Esmeraldas</title>
+    <!-- Tailwind CSS para diseño fluido y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React y ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel para compilar React en tiempo real -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide para iconos vectoriales limpios -->
+    <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Estilo personalizado para las barras de desplazamiento en el chat */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f43f5e;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <!-- Contenedor donde se dibuja nuestra App de React -->
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Base de datos de postres, batidos y cafés con fotos reales de excelente calidad
+        const POSTRES = [
+            {
+                id: 'limon',
+                nombre: 'Mousse de Limón Celestial',
+                categoria: 'Cítricos',
+                precio: 3.50,
+                promocion: 'Martes de 2x1 en cítricos 🍋',
+                imagen: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&q=80&w=600',
+                descripcion: 'Una crema suave, ligera y sumamente refrescante elaborada con zumo de limones frescos de nuestra provincia, coronada con ralladura fina sobre una base crocante.',
+                ingredientes: ['Crema de leche batida fría', 'Zumo de limón recién exprimido', 'Leche condensada premium', 'Ralladura de limón confitada', 'Base crocante de galletas de mantequilla'],
+                preparacion: '1. Se muelen las galletas de mantequilla para crear una base firme y crocante en el vaso.\n2. Batimos la leche condensada con el zumo de limón natural hasta lograr una crema espesa y aromática.\n3. Incorporamos la crema de leche montada con movimientos envolventes para capturar el aire y lograr la textura característica.\n4. Servimos sobre la galleta y refrigeramos por 4 horas.',
+                tiempoPrep: '15 min de elaboración básica'
+            },
+            {
+                id: 'maracuya',
+                nombre: 'Mousse de Maracuyá Exótico',
+                categoria: 'Tropicales',
+                precio: 3.75,
+                promocion: 'Jueves de Locura (Llévalo por solo $3.00) 💛',
+                imagen: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&q=80&w=600',
+                descripcion: 'El balance perfecto entre el dulzor de la crema y la acidez silvestre de la fruta de la pasión. Decorado con un glaseado brillante de semillas de maracuyá.',
+                ingredientes: ['Pulpa pura de maracuyá seleccionada', 'Crema de leche batida', 'Merengue italiano muy suave', 'Gelatina sin sabor hidratada', 'Semillas de maracuyá en almíbar dulce'],
+                preparacion: '1. Se extrae la pulpa de maracuyá pura y se reduce un poco al fuego con azúcar.\n2. Mezclamos la pulpa tibia con la gelatina disuelta.\n3. Añadimos el merengue italiano caliente para aportar burbujas de aire estables.\n4. Integramos la crema batida, servimos en copas y decoramos con la reducción de semillas frías antes de enfriar.',
+                tiempoPrep: '20 min de elaboración'
+            },
+            {
+                id: 'clasicos',
+                nombre: 'Mousse de Frutos Rojos Clásicos',
+                categoria: 'Clásicos Frutales',
+                precio: 4.00,
+                promocion: 'Finde Dulce (15% de descuento en el segundo postre) 🍓',
+                imagen: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&q=80&w=600',
+                descripcion: 'Deliciosa e irresistible textura aterciopelada elaborada con una combinación balanceada de fresas, moras y frambuesas silvestres.',
+                ingredientes: ['Mix de fresas, moras y frambuesas', 'Crema de leche de alta densidad', 'Azúcar glass', 'Un toque de zumo de limón para resaltar sabores'],
+                preparacion: '1. Cocinamos los frutos rojos para obtener un puré intenso, luego lo colamos para eliminar las semillas pequeñas.\n2. Batimos la crema de leche fría a punto chantilly medio.\n3. Mezclamos con delicadeza el puré de frutas frío y la crema.\n4. Servimos en envases individuales y dejamos reposar en frío para asentar la textura.',
+                tiempoPrep: '25 min de elaboración'
+            },
+            {
+                id: 'cafe',
+                nombre: 'Mousse Espresso Capuchino',
+                categoria: 'Cafetería',
+                precio: 3.50,
+                promocion: 'Lunes de Energía (Incluye galleta crocante gratis) ☕',
+                imagen: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&q=80&w=600',
+                descripcion: 'Diseñado especialmente para los amantes del buen café. Combina la intensidad del grano tostado con la delicadeza de una nube de vainilla.',
+                ingredientes: ['Café espresso concentrado caliente', 'Yemas de huevo pasteurizadas', 'Crema de leche batida', 'Cacao en polvo orgánico local'],
+                preparacion: '1. Preparamos un espresso concentrado caliente con café ecuatoriano.\n2. Batimos las yemas con azúcar a baño María junto con el café para pasteurizar e infundir el sabor.\n3. Dejamos enfriar la mezcla.\n4. Añadimos con cuidado la crema batida a punto firme y espolvoreamos cacao orgánico en la superficie al servir.',
+                tiempoPrep: '15 min de elaboración'
+            },
+            {
+                id: 'cacahuate',
+                nombre: 'Mousse de Cacahuate Crocante',
+                categoria: 'Especialidades',
+                precio: 4.25,
+                promocion: 'Miércoles Crocante (Maní caramelizado extra gratis) 🥜',
+                imagen: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&q=80&w=600',
+                descripcion: 'Sabor intenso a mantequilla de maní artesanal balanceado perfectamente con trozos crujientes de cacahuates tostados de nuestra costa ecuatoriana.',
+                ingredientes: ['Mantequilla de maní natural', 'Crema de leche batida fría', 'Cacahuates tostados y picados', 'Caramelo de toffee hecho en casa'],
+                preparacion: '1. Suavizamos la mantequilla de maní entibiándola ligeramente.\n2. Añadimos una pequeña porción de crema batida para aligerar la consistencia de la mantequilla.\n3. Agregamos el resto de la crema batida con movimientos lentos.\n4. Servimos intercalando capas de mousse con cacahuates tostados triturados y finos hilos de caramelo.',
+                tiempoPrep: '20 min de elaboración'
+            },
+            {
+                id: 'mango',
+                nombre: 'Mousse de Mango Real',
+                categoria: 'Tropicales',
+                precio: 3.80,
+                promocion: 'Viernes Tropical (Lleva 3 por el precio de 2) 🥭',
+                imagen: 'https://images.unsplash.com/photo-1546173152-318ae14d4323?auto=format&fit=crop&q=80&w=600',
+                descripcion: 'Una explosión de dulzura natural preparada con mangos maduros locales de la costa, ofreciendo una frescura inigualable.',
+                ingredientes: ['Pulpa de mango maduro de la costa', 'Crema de leche batida', 'Zumo de limón fresco', 'Dados de mango para la decoración final'],
+                preparacion: '1. Procesamos los mangos maduros sin añadir agua hasta obtener un puré sedoso; lo pasamos por un colador fino.\n2. Mezclamos con unas gotitas de zumo de limón para conservar el color brillante.\n3. Añadimos la crema de leche batida de forma suave para mantener el volumen.\n4. Decoramos con jugosos dados de mango fresco.',
+                tiempoPrep: '15 min de elaboración'
+            },
+            {
+                id: 'batido_fresa',
+                nombre: 'Batido Supremo de Fresa & Chantilly',
+                categoria: 'Batidos',
+                precio: 3.25,
+                promocion: 'Sábados de Batidos al 2x1 🍓',
+                imagen: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&q=80&w=600',
+                descripcion: 'Un batido sumamente cremoso a base de fresas frescas licuadas con helado artesanal de vainilla y coronado con una suave capa de crema chantilly.',
+                ingredientes: ['Fresas maduras seleccionadas', 'Leche entera fría', 'Helado artesanal de vainilla', 'Crema chantilly para la superficie', 'Sirope de fresa casero para decorar'],
+                preparacion: '1. Licuamos las fresas frescas junto con la leche entera muy fría y el helado de vainilla.\n2. Decoramos las paredes del vaso con hilos de sirope de fresa.\n3. Vertemos la mezcla batida espesa y decoramos la superficie con una montaña de crema chantilly fresca y una fresa entera.',
+                tiempoPrep: '5 min de preparación'
+            },
+            {
+                id: 'capuchino_mousse',
+                nombre: 'Capuchino Italiano con Espuma de Mousse',
+                categoria: 'Cafetería',
+                precio: 2.75,
+                promocion: 'Tardes de Café (Mini postre de cortesía de 4pm a 6pm) ☕',
+                imagen: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&q=80&w=600',
+                descripcion: 'Espresso caliente extraído de granos seleccionados con leche vaporizada sedosa y un toque único de nuestra crema helada de mousse.',
+                ingredientes: ['Shot de espresso de café de altura', 'Leche entera emulsionada', 'Crema fría de mousse de vainilla', 'Cacao orgánico o canela en polvo'],
+                preparacion: '1. Extraemos un espresso directo en la taza.\n2. Vaporizamos la leche para crear una microespuma sedosa y la vertemos sobre el café.\n3. Colocamos delicadamente una cucharada de nuestra crema de mousse de vainilla sobre la taza.\n4. Finalizamos espolvoreando cacao orgánico de aroma.',
+                tiempoPrep: '8 min de preparación'
+            }
+        ];
+
+        // Componente de icono dinámico para evitar fallos de renderizado
+        function Icon({ name, size = 20, className = "" }) {
+            const spanRef = useRef(null);
+
+            useEffect(() => {
+                if (spanRef.current && window.lucide) {
+                    spanRef.current.innerHTML = '';
+                    const iconElement = document.createElement('i');
+                    iconElement.setAttribute('data-lucide', name);
+                    iconElement.setAttribute('style', `width: ${size}px; height: ${size}px; display: inline-block;`);
+                    iconElement.className = className;
+                    spanRef.current.appendChild(iconElement);
+                    window.lucide.createIcons({
+                        attrs: {
+                            class: className
+                        }
+                    });
+                }
+            }, [name, size, className]);
+
+            return <span ref={spanRef} className="inline-flex items-center justify-center"></span>;
+        }
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('menu'); // 'menu', 'chat', 'info'
+            const [selectedPostre, setSelectedPostre] = useState(null);
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+            const [inputText, setInputText] = useState('');
+            const [isTyping, setIsTyping] = useState(false);
+            const chatEndRef = useRef(null);
+
+            const [chatMessages, setChatMessages] = useState([
+                {
+                    id: 1,
+                    sender: 'bot',
+                    text: '¡Hola! 🍓 Bienvenido a **Crocrant & Mousse** en Las Palmas (Esmeraldas). Soy tu chef y guía virtual de postres. 🍨 ¿Qué delicia te gustaría probar hoy?',
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }
+            ]);
+
+            const SUGERENCIAS = [
+                "¿Cuáles son las ofertas de hoy?",
+                "¿Cómo preparan el Mousse de Maracuyá? 💛",
+                "Háblame del Capuchino ☕",
+                "¿Dónde están ubicados?",
+                "¿Cuánto demora el domicilio?"
+            ];
+
+            useEffect(() => {
+                if (chatEndRef.current) {
+                    chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, [chatMessages, isTyping]);
+
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [activeTab, selectedPostre]);
+
+            // Motor de respuestas del asistente chatbot
+            const procesarMensaje = (mensaje) => {
+                const texto = mensaje.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                setIsTyping(true);
+
+                setTimeout(() => {
+                    let respuesta = "";
+
+                    if (texto.includes("hola") || texto.includes("buenos dias") || texto.includes("buenas tardes")) {
+                        respuesta = "¡Hola! Qué alegría saludarte en **Crocrant & Mousse**. ¿Listo para probar las mejores delicias cremosas, cafés y batidos de Esmeraldas? Puedes preguntarme sobre promociones, postres o nuestra ubicación. 🌟";
+                    } 
+                    else if (texto.includes("promo") || texto.includes("oferta") || texto.includes("dias") || texto.includes("descuento")) {
+                        respuesta = "🎉 **¡Nuestras Promociones Semanales!** 🎉\n\n" +
+                            "☕ **Lunes:** Por la compra de un *Mousse Espresso*, ¡galleta artesanal gratis!\n" +
+                            "🍋 **Martes:** 2x1 en *Mousse de Limón Celestial*.\n" +
+                            "🥜 **Miércoles:** Topping de maní caramelizado gratis en tu *Mousse de Cacahuate*.\n" +
+                            "💛 **Jueves:** *Mousse de Maracuyá* a solo $3.00.\n" +
+                            "🥭 **Viernes:** ¡Viernes Tropical! Lleva 3 *Mousse de Mango Real* y paga solo 2.\n" +
+                            "🍓 **Sábado:** ¡Doble sabor! 2x1 en nuestro *Batido Supremo de Fresa & Chantilly*.\n" +
+                            "🧁 **Domingo:** 15% de descuento en tu segundo *Mousse de Frutos Rojos*.\n\n" +
+                            "☕ *Tardes de Café:* ¡De 4:00 PM a 6:00 PM todos los días! Tu *Capuchino Italiano con Espuma de Mousse* viene con un mini postre de cortesía.\n\n¿Quieres que te enviemos alguno a tu ubicación? 🛵";
+                    } 
+                    else if (texto.includes("batido") || texto.includes("licuado") || texto.includes("fresa")) {
+                        const postre = POSTRES.find(p => p.id === 'batido_fresa');
+                        respuesta = `🍓 **${postre.nombre}** ($${postre.precio.toFixed(2)})\n\n*Descripción:* ${postre.descripcion}\n*Promo:* ${postre.promocion}\n\n*Preparación:* ${postre.preparacion}`;
+                    }
+                    else if (texto.includes("capuchino") || texto.includes("cappuccino") || texto.includes("cafe")) {
+                        const postre = POSTRES.find(p => p.id === 'capuchino_mousse');
+                        respuesta = `☕ **${postre.nombre}** ($${postre.precio.toFixed(2)})\n\n*Descripción:* ${postre.descripcion}\n*Promo:* ${postre.promocion}\n\n*Preparación:* ${postre.preparacion}`;
+                    }
+                    else if (texto.includes("ubicados") || texto.includes("donde estan") || texto.includes("direccion") || texto.includes("flopec") || texto.includes("las palmas") || texto.includes("esmeraldas")) {
+                        respuesta = "📍 **¡Estamos en la mejor zona de Esmeraldas!**\n\nNos encontramos en el **Sector Las Palmas**, justo al frente del gran edificio de **FLOPEC**, sobre el animado **Malecón de Las Palmas**.\n\n🌊 El lugar ideal para disfrutar del atardecer con un postre bien frío. ¡Tenemos aire acondicionado y una vista increíble!";
+                    } 
+                    else if (texto.includes("domicilio") || texto.includes("demora") || texto.includes("tiempo") || texto.includes("entrega") || texto.includes("envio")) {
+                        respuesta = "🛵 **Tiempos de Entrega (Domicilio):**\n\n* **Sector Las Palmas:** De **15 a 25 minutos**.\n* **Centro de Esmeraldas:** De **30 a 45 minutos**.\n* **Otras zonas de Esmeraldas:** Hasta 50 minutos.\n\n*Nota:* Empacamos los pedidos en envases térmicos especiales para mantener la consistencia cremosa de los postres intacta.";
+                    } 
+                    else if (texto.includes("limon")) {
+                        const postre = POSTRES.find(p => p.id === 'limon');
+                        respuesta = `🍋 **${postre.nombre}** ($${postre.precio.toFixed(2)})\n\n*Descripción:* ${postre.descripcion}\n*Promo:* ${postre.promocion}\n\n*Preparación:* ${postre.preparacion}`;
+                    } 
+                    else if (texto.includes("maracuya")) {
+                        const postre = POSTRES.find(p => p.id === 'maracuya');
+                        respuesta = `💛 **${postre.nombre}** ($${postre.precio.toFixed(2)})\n\n*Descripción:* ${postre.descripcion}\n*Promo:* ${postre.promocion}\n\n*Preparación:* ${postre.preparacion}`;
+                    }
+                    else if (texto.includes("fruto") || texto.includes("clasico") || texto.includes("rojo")) {
+                        const postre = POSTRES.find(p => p.id === 'clasicos');
+                        respuesta = `🍓 **${postre.nombre}** ($${postre.precio.toFixed(2)})\n\n*Descripción:* ${postre.descripcion}\n*Promo:* ${postre.promocion}\n\n*Preparación:* ${postre.preparacion}`;
+                    }
+                    else if (texto.includes("cacahuate") || texto.includes("mani")) {
+                        const postre = POSTRES.find(p => p.id === 'cacahuate');
+                        respuesta = `🥜 **${postre.nombre}** ($${postre.precio.toFixed(2)})\n\n*Descripción:* ${postre.descripcion}\n*Promo:* ${postre.promocion}\n\n*Preparación:* ${postre.preparacion}`;
+                    }
+                    else if (texto.includes("mango")) {
+                        const postre = POSTRES.find(p => p.id === 'mango');
+                        respuesta = `🥭 **${postre.nombre}** ($${postre.precio.toFixed(2)})\n\n*Descripción:* ${postre.descripcion}\n*Promo:* ${postre.promocion}\n\n*Preparación:* ${postre.preparacion}`;
+                    }
+                    else if (texto.includes("preparar") || texto.includes("como se hace") || texto.includes("receta")) {
+                        respuesta = "🍳 **¿Quieres conocer nuestra preparación?**\n\nTodos nuestros postres se realizan combinando frutas seleccionadas, crema batida en frío extremo y movimientos suaves de manera artesanal.\n\n¿De cuál de nuestros sabores (*limón, maracuyá, clásicos, café, cacahuate, mango, batidos o capuchinos*) deseas conocer la receta detallada?";
+                    }
+                    else {
+                        respuesta = "¡Oh! No logré entender por completo tu consulta. 🍰 Pero puedes preguntarme sobre:\n\n• Nuestras **promociones** de la semana.\n• Los **postres, batidos o capuchinos**.\n• Nuestra **ubicación** frente a FLOPEC.\n• El tiempo del **domicilio**.";
+                    }
+
+                    setChatMessages(prev => [
+                        ...prev, 
+                        {
+                            id: Date.now(),
+                            sender: 'bot',
+                            text: respuesta,
+                            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        }
+                    ]);
+                    setIsTyping(false);
+                }, 1000);
+            };
+
+            const handleSendMessage = (e) => {
+                e.preventDefault();
+                if (!inputText.trim()) return;
+
+                const nuevoMensaje = {
+                    id: Date.now(),
+                    sender: 'user',
+                    text: inputText,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+
+                setChatMessages(prev => [...prev, nuevoMensaje]);
+                procesarMensaje(inputText);
+                setInputText('');
+            };
+
+            const clickSugerencia = (texto) => {
+                const nuevoMensaje = {
+                    id: Date.now(),
+                    sender: 'user',
+                    text: texto,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                setChatMessages(prev => [...prev, nuevoMensaje]);
+                procesarMensaje(texto);
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 flex flex-col text-slate-800">
+                    
+                    {/* BARRA DE NAVEGACIÓN */}
+                    <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-rose-100">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                            
+                            {/* Logo */}
+                            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('menu')}>
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 via-rose-400 to-pink-500 flex items-center justify-center shadow-md shadow-rose-200">
+                                    <span className="text-white text-xl font-black italic">C&M</span>
+                                </div>
+                                <div>
+                                    <h1 className="font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-amber-500 via-rose-500 to-pink-600 bg-clip-text text-transparent">
+                                        Crocrant & Mousse
+                                    </h1>
+                                    <p className="text-[10px] sm:text-xs text-slate-400 font-semibold uppercase tracking-wider">Las Palmas • Esmeraldas</p>
+                                </div>
+                            </div>
+
+                            {/* Navegación Escritorio */}
+                            <nav className="hidden md:flex items-center gap-2">
+                                <button 
+                                    onClick={() => setActiveTab('menu')}
+                                    className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
+                                        activeTab === 'menu' 
+                                            ? 'bg-rose-50 text-rose-600 shadow-sm' 
+                                            : 'text-slate-600 hover:text-rose-500 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <Icon name="chef-hat" size={18} />
+                                    Nuestra Carta
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('chat')}
+                                    className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 relative ${
+                                        activeTab === 'chat' 
+                                            ? 'bg-rose-50 text-rose-600 shadow-sm' 
+                                            : 'text-slate-600 hover:text-rose-500 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <Icon name="message-square" size={18} />
+                                    Asistente Dulce (Chat)
+                                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                                    </span>
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('info')}
+                                    className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${
+                                        activeTab === 'info' 
+                                            ? 'bg-rose-50 text-rose-600 shadow-sm' 
+                                            : 'text-slate-600 hover:text-rose-500 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <Icon name="map-pin" size={18} />
+                                    Ubicación y Domicilio
+                                </button>
+                            </nav>
+
+                            {/* WhatsApp */}
+                            <div className="hidden lg:flex items-center">
+                                <a 
+                                    href="https://wa.me/593900000000?text=Hola!%20Me%20gustaria%20pedir%20un%20delicioso%20mousse..."
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold px-5 py-2.5 rounded-2xl shadow-lg shadow-emerald-100 transition-all transform hover:-translate-y-0.5"
+                                >
+                                    <Icon name="phone" size={18} />
+                                    Pedir por WhatsApp
+                                </a>
+                            </div>
+
+                            {/* Menú Móvil */}
+                            <div className="md:hidden">
+                                <button 
+                                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                    className="p-2 text-slate-600 hover:text-rose-500 focus:outline-none"
+                                >
+                                    {isMobileMenuOpen ? <Icon name="x" size={24} /> : <Icon name="menu" size={24} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Desplegable Móvil */}
+                        {isMobileMenuOpen && (
+                            <div className="md:hidden bg-white border-t border-rose-50 px-4 py-4 space-y-2 shadow-lg">
+                                <button 
+                                    onClick={() => { setActiveTab('menu'); setIsMobileMenuOpen(false); }}
+                                    className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 ${
+                                        activeTab === 'menu' ? 'bg-rose-50 text-rose-600' : 'text-slate-600'
+                                    }`}
+                                >
+                                    <Icon name="chef-hat" size={18} />
+                                    Nuestra Carta
+                                </button>
+                                <button 
+                                    onClick={() => { setActiveTab('chat'); setIsMobileMenuOpen(false); }}
+                                    className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 ${
+                                        activeTab === 'chat' ? 'bg-rose-50 text-rose-600' : 'text-slate-600'
+                                    }`}
+                                >
+                                    <Icon name="message-square" size={18} />
+                                    Asistente Dulce (Chat)
+                                </button>
+                                <button 
+                                    onClick={() => { setActiveTab('info'); setIsMobileMenuOpen(false); }}
+                                    className={`w-full text-left px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-3 ${
+                                        activeTab === 'info' ? 'bg-rose-50 text-rose-600' : 'text-slate-600'
+                                    }`}
+                                >
+                                    <Icon name="map-pin" size={18} />
+                                    Ubicación y Domicilio
+                                </button>
+                                <div className="pt-2 border-t border-slate-100">
+                                    <a 
+                                        href="https://wa.me/593900000000?text=Hola!%20Me%20gustaria%20pedir..."
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white font-extrabold py-3 rounded-xl"
+                                    >
+                                        <Icon name="phone" size={18} />
+                                        Pedir por WhatsApp
+                                    </a>
+                                </div>
+                            </div>
+                        )}
+                    </header>
+
+                    {/* HERO BANNER */}
+                    <section className="bg-gradient-to-b from-amber-50/50 via-rose-50/30 to-white py-12 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden">
+                        <div className="absolute top-10 left-10 text-amber-300 opacity-20 pointer-events-none">
+                            <Icon name="sparkles" size={120} />
+                        </div>
+                        <div className="absolute -bottom-10 right-10 text-rose-300 opacity-20 pointer-events-none">
+                            <Icon name="heart" size={140} />
+                        </div>
+
+                        <div className="max-w-3xl mx-auto relative z-10">
+                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 tracking-wider uppercase mb-4">
+                                <Icon name="sparkles" size={12} className="text-amber-600 mr-1" /> ¡Menú de Dulces y Cafés frente al mar! 🍓☕
+                            </span>
+                            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                                Descubre la Magia de la <br />
+                                <span className="text-rose-500">Textura de Nube</span> en Esmeraldas
+                            </h2>
+                            <p className="mt-4 text-slate-500 text-lg md:text-xl font-medium max-w-2xl mx-auto">
+                                Disfruta de la fusión perfecta de lo crujiente (<span className="font-extrabold text-amber-600">Crocrant</span>) y la suavidad etérea (<span className="font-extrabold text-rose-500">Mousse</span>).
+                            </p>
+
+                            <div className="mt-6 flex flex-wrap justify-center gap-3">
+                                <div className="flex items-center gap-2 bg-white border border-slate-100 shadow-sm px-4 py-2 rounded-2xl">
+                                    <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
+                                    <span className="text-sm font-bold text-slate-700">Abierto de Martes a Domingo</span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-rose-500 text-white shadow-md shadow-rose-200 px-4 py-2 rounded-2xl">
+                                    <Icon name="clock" size={16} />
+                                    <span className="text-sm font-bold">Domicilio Exprés</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* CONTENIDO PRINCIPAL */}
+                    <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                        
+                        {/* CARTA DE ESPECIALIDADES */}
+                        {activeTab === 'menu' && (
+                            <div className="space-y-10">
+                                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                                    <div>
+                                        <h3 className="text-3xl font-black text-slate-900">Nuestras Delicias</h3>
+                                        <p className="text-slate-500 mt-1 font-medium">Pulsa en cualquier delicia para conocer su receta y preparación secreta.</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-amber-50 text-amber-800 px-4 py-2 rounded-xl border border-amber-100 self-start">
+                                        <Icon name="tag" size={18} className="text-amber-600 shrink-0" />
+                                        <span className="text-xs font-bold leading-relaxed">¡Las ofertas cambian todos los días del año!</span>
+                                    </div>
+                                </div>
+
+                                {/* Grid de Productos */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {POSTRES.map((postre) => (
+                                        <div 
+                                            key={postre.id}
+                                            className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-slate-100 transition-all duration-300 flex flex-col group"
+                                        >
+                                            <div className="h-56 w-full overflow-hidden relative bg-slate-200">
+                                                <img 
+                                                    src={postre.imagen} 
+                                                    alt={postre.nombre}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                    loading="lazy"
+                                                />
+                                                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md">
+                                                    <span className="text-xs font-extrabold text-rose-600 tracking-wider uppercase">
+                                                        {postre.categoria}
+                                                    </span>
+                                                </div>
+                                                <div className="absolute bottom-4 right-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white px-4 py-1.5 rounded-full shadow-lg text-xs font-extrabold">
+                                                    {postre.promocion.split('(')[0]}
+                                                </div>
+                                            </div>
+
+                                            <div className="p-6 flex-1 flex flex-col justify-between">
+                                                <div>
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <h4 className="text-xl font-bold text-slate-900 group-hover:text-rose-500 transition-colors">
+                                                            {postre.nombre}
+                                                        </h4>
+                                                        <span className="text-2xl font-black text-rose-500 block shrink-0 ml-2">
+                                                            ${postre.precio.toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-slate-500 text-sm leading-relaxed mb-4">
+                                                        {postre.descripcion}
+                                                    </p>
+                                                </div>
+
+                                                <div className="pt-4 border-t border-slate-50 flex items-center justify-between gap-2">
+                                                    <div className="flex items-center gap-1 text-slate-400">
+                                                        <Icon name="clock" size={15} />
+                                                        <span className="text-xs font-semibold">{postre.tiempoPrep}</span>
+                                                    </div>
+
+                                                    <button 
+                                                        onClick={() => setSelectedPostre(postre)}
+                                                        className="bg-amber-100 hover:bg-rose-500 hover:text-white text-amber-800 transition-all duration-300 font-extrabold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1"
+                                                    >
+                                                        <Icon name="chef-hat" size={14} />
+                                                        Receta
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* CHATBOT */}
+                        {activeTab === 'chat' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                                
+                                {/* Panel de Sugerencias */}
+                                <div className="lg:col-span-1 bg-white rounded-3xl p-6 border border-rose-50 flex flex-col justify-between shadow-sm">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-4 text-rose-500">
+                                            <Icon name="sparkles" size={20} className="text-rose-500" />
+                                            <h4 className="font-black text-lg">Guía Rápida</h4>
+                                        </div>
+                                        <p className="text-xs text-slate-500 mb-6 font-medium leading-relaxed">
+                                            Haz clic en cualquiera de las siguientes opciones para que el asistente te responda al instante sobre las delicias de la casa.
+                                        </p>
+
+                                        <div className="space-y-2.5">
+                                            {SUGERENCIAS.map((sug, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => clickSugerencia(sug)}
+                                                    className="w-full text-left text-xs bg-slate-50 hover:bg-rose-50 hover:text-rose-600 p-3 rounded-2xl font-bold transition-all border border-transparent hover:border-rose-100 flex items-center justify-between"
+                                                >
+                                                    <span className="line-clamp-2">{sug}</span>
+                                                    <Icon name="chevron-right" size={14} className="shrink-0 ml-1 opacity-60 text-rose-400" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+                                        <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-2">Canal Directo</p>
+                                        <a 
+                                            href="https://wa.me/593900000000" 
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 font-bold"
+                                        >
+                                            <Icon name="phone" size={12} className="text-emerald-600 mr-1" />
+                                            Chatear con un Humano
+                                        </a>
+                                    </div>
+                                </div>
+
+                                {/* Caja del Chat */}
+                                <div className="lg:col-span-3 bg-white rounded-3xl shadow-lg border border-rose-50 flex flex-col h-[550px] overflow-hidden">
+                                    
+                                    {/* Cabecera Chat */}
+                                    <div className="p-4 bg-gradient-to-r from-amber-400 via-rose-400 to-pink-500 text-white flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center font-bold text-lg border border-white/10 shadow-inner">
+                                                🧁
+                                            </div>
+                                            <div>
+                                                <h4 className="font-extrabold text-base leading-tight">Crocrant & Mousse Bot</h4>
+                                                <p className="text-xs text-white/90 font-medium flex items-center gap-1">
+                                                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse inline-block"></span>
+                                                    En línea • Respuestas al instante
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Mensajes */}
+                                    <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/50 custom-scrollbar">
+                                        {chatMessages.map((msg) => (
+                                            <div 
+                                                key={msg.id} 
+                                                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                                            >
+                                                <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 shadow-sm relative ${
+                                                    msg.sender === 'user' 
+                                                        ? 'bg-rose-500 text-white rounded-br-none' 
+                                                        : 'bg-white text-slate-800 rounded-bl-none border border-slate-100'
+                                                }`}>
+                                                    <p className="text-sm leading-relaxed whitespace-pre-line font-medium">
+                                                        {msg.text}
+                                                    </p>
+                                                    <span className={`text-[10px] block mt-2 text-right ${
+                                                        msg.sender === 'user' ? 'text-white/70' : 'text-slate-400'
+                                                    }`}>
+                                                        {msg.timestamp}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {isTyping && (
+                                            <div className="flex justify-start">
+                                                <div className="bg-white border border-slate-100 rounded-2xl rounded-bl-none p-4 shadow-sm flex items-center gap-1">
+                                                    <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                                    <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                                    <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div ref={chatEndRef} />
+                                    </div>
+
+                                    {/* Entrada de texto */}
+                                    <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-slate-100 flex items-center gap-2">
+                                        <input 
+                                            type="text" 
+                                            value={inputText}
+                                            onChange={(e) => setInputText(e.target.value)}
+                                            placeholder="Escribe tu pregunta aquí..."
+                                            className="flex-1 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-400 border border-slate-200 focus:border-transparent rounded-2xl px-5 py-3 text-sm font-semibold text-slate-800 transition-all outline-none"
+                                        />
+                                        <button 
+                                            type="submit"
+                                            disabled={!inputText.trim()}
+                                            className="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-2xl p-3.5 transition-all shadow-md shadow-rose-200 disabled:shadow-none shrink-0"
+                                        >
+                                            <Icon name="send" size={18} />
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* UBICACIÓN Y ENTREGA */}
+                        {activeTab === 'info' && (
+                            <div className="space-y-8 max-w-5xl mx-auto">
+                                <div className="bg-white rounded-3xl border border-rose-50 shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-2">
+                                    
+                                    <div className="p-8 sm:p-10 flex flex-col justify-between space-y-6">
+                                        <div>
+                                            <div className="flex items-center gap-2 text-rose-500 mb-3">
+                                                <Icon name="map-pin" size={24} className="text-rose-500" />
+                                                <span className="font-extrabold text-sm uppercase tracking-wider">Ubicación Física</span>
+                                            </div>
+                                            <h3 className="text-3xl font-black text-slate-900 leading-tight">Malecón de Las Palmas</h3>
+                                            <p className="text-slate-500 font-medium mt-2">Esmeraldas, Ecuador</p>
+                                            
+                                            <div className="mt-6 space-y-4">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-6 h-6 rounded bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">📍</div>
+                                                    <p className="text-sm text-slate-600 font-medium">
+                                                        Estamos ubicados <span className="font-bold text-slate-800">justo en frente del edificio de FLOPEC</span>, en pleno Malecón de Las Palmas.
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-6 h-6 rounded bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">🌊</div>
+                                                    <p className="text-sm text-slate-600 font-medium">
+                                                        Un entorno paradisíaco y fresco ideal para disfrutar de la brisa marina. ¡Perfecto para visitarnos en familia!
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-6 border-t border-slate-100">
+                                            <a 
+                                                href="https://maps.google.com" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3.5 rounded-2xl transition-all shadow-md text-sm"
+                                            >
+                                                <Icon name="navigation" size={16} />
+                                                Cómo llegar con Google Maps
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {/* Representación gráfica limpia del mapa */}
+                                    <div className="bg-gradient-to-br from-amber-400 via-rose-300 to-sky-200 p-8 flex items-center justify-center relative min-h-[300px]">
+                                        <div className="absolute top-4 right-4 bg-sky-50/90 backdrop-blur-sm px-4 py-2 rounded-xl text-xs font-bold text-sky-700 shadow-sm">
+                                            🌊 Océano Pacífico (Playa Las Palmas)
+                                        </div>
+                                        
+                                        <div className="w-full max-w-sm bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xl space-y-4 border border-white">
+                                            <h4 className="font-extrabold text-slate-800 text-center border-b pb-2">Calle del Malecón de Las Palmas</h4>
+                                            
+                                            <div className="grid grid-cols-2 gap-3 text-center">
+                                                <div className="bg-amber-100 border border-amber-200 rounded-xl p-3 flex flex-col items-center justify-center">
+                                                    <span className="text-xs font-extrabold text-amber-800">Edificio FLOPEC</span>
+                                                    <span className="text-[10px] text-amber-600 mt-1">Corporativo</span>
+                                                </div>
+                                                
+                                                <div className="bg-rose-500 text-white rounded-xl p-3 flex flex-col items-center justify-center shadow-lg relative">
+                                                    <span className="text-xs font-black">🍦 CROCRANT</span>
+                                                    <span className="text-[10px] font-bold text-white/90">& MOUSSE</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-slate-100 rounded-xl p-2.5 text-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                                ↔️ Avenida Principal del Malecón ↔️
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Tiempos de Entrega */}
+                                <div className="bg-white rounded-3xl p-8 border border-rose-50 shadow-sm">
+                                    <div className="flex items-center gap-2 text-rose-500 mb-6">
+                                        <Icon name="clock" size={24} className="text-rose-500" />
+                                        <h4 className="font-black text-xl">Tiempos de Delivery & Cobertura</h4>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                                            <span className="text-2xl mb-2 block">🛵</span>
+                                            <h5 className="font-bold text-slate-900 text-sm">Sector Las Palmas</h5>
+                                            <p className="text-2xl font-black text-rose-500 mt-1">15 - 25 min</p>
+                                        </div>
+
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                                            <span className="text-2xl mb-2 block">⚡</span>
+                                            <h5 className="font-bold text-slate-900 text-sm">Centro de Esmeraldas</h5>
+                                            <p className="text-2xl font-black text-rose-500 mt-1">30 - 45 min</p>
+                                        </div>
+
+                                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                                            <span className="text-2xl mb-2 block">🌍</span>
+                                            <h5 className="font-bold text-slate-900 text-sm">Otras Zonas</h5>
+                                            <p className="text-2xl font-black text-rose-500 mt-1">Hasta 50 min</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                    </main>
+
+                    {/* MODAL DE RECETA */}
+                    {selectedPostre && (
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl max-w-xl w-full max-h-[85vh] overflow-y-auto shadow-2xl relative">
+                                
+                                <button 
+                                    onClick={() => setSelectedPostre(null)}
+                                    className="absolute top-4 right-4 bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-500 p-2 rounded-full transition-all z-10"
+                                >
+                                    <Icon name="x" size={20} />
+                                </button>
+
+                                <div className="h-48 w-full relative">
+                                    <img 
+                                        src={selectedPostre.imagen} 
+                                        alt={selectedPostre.nombre}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+                                    <div className="absolute bottom-4 left-6">
+                                        <span className="text-xs bg-amber-400 text-slate-900 px-3 py-1 rounded-full font-extrabold uppercase tracking-wider mb-1.5 inline-block">
+                                            {selectedPostre.categoria}
+                                        </span>
+                                        <h4 className="text-2xl font-black text-white">{selectedPostre.nombre}</h4>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 space-y-5">
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Tiempo de elaboración</p>
+                                        <div className="flex items-center gap-1 mt-1 text-slate-700">
+                                            <Icon name="clock" size={16} className="text-rose-500 mr-1" />
+                                            <span className="font-bold text-sm">{selectedPostre.tiempoPrep}</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h5 className="font-bold text-slate-900 text-sm border-b pb-1.5 mb-2 flex items-center gap-1.5">
+                                            Ingredientes Clave
+                                        </h5>
+                                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            {selectedPostre.ingredientes.map((ing, i) => (
+                                                <li key={i} className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                                                    <span className="w-1.5 h-1.5 bg-rose-400 rounded-full shrink-0"></span>
+                                                    {ing}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h5 className="font-bold text-slate-900 text-sm border-b pb-1.5 mb-2 flex items-center gap-1.5">
+                                            Pasos de Preparación
+                                        </h5>
+                                        <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line font-medium bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                            {selectedPostre.preparacion}
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-slate-100 flex gap-3">
+                                        <a 
+                                            href={`https://wa.me/593900000000?text=Hola!%20Quiero%20ordenar%20el%20delicioso%20${encodeURIComponent(selectedPostre.nombre)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold py-3 rounded-2xl shadow-lg shadow-emerald-100 transition-all text-center text-sm flex items-center justify-center gap-2"
+                                        >
+                                            <Icon name="phone" size={16} />
+                                            Pedir por WhatsApp ahora
+                                        </a>
+                                        <button 
+                                            onClick={() => setSelectedPostre(null)}
+                                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 rounded-2xl text-xs transition-all"
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* PIE DE PÁGINA */}
+                    <footer className="bg-slate-900 text-slate-400 py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-800 mt-auto">
+                        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-rose-500 flex items-center justify-center font-bold text-white text-base">
+                                    C&M
+                                </div>
+                                <div>
+                                    <h5 className="text-white font-extrabold text-lg">Crocrant & Mousse</h5>
+                                    <p className="text-xs text-slate-500">Esmeraldas • Tradición y Sabor que Enamora</p>
+                                </div>
+                            </div>
+                            <div className="text-xs space-y-1">
+                                <p>📍 Sector Las Palmas, Frente a FLOPEC, por el Malecón de Las Palmas.</p>
+                                <p>🛵 Entregas a Domicilio en toda la Ciudad de Esmeraldas.</p>
+                            </div>
+                        </div>
+                        <div className="max-w-7xl mx-auto mt-8 pt-8 border-t border-slate-800/60 text-center text-xs text-slate-600">
+                            <p>© 2026 Crocrant & Mousse. Todos los derechos reservados. Esmeraldas, Ecuador.</p>
+                        </div>
+                    </footer>
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
